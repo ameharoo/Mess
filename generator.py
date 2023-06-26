@@ -9,6 +9,10 @@ class CyclicDependencyError(RuntimeError):
     pass
 
 
+class UnresolvedDependencyError(RuntimeError):
+    pass
+
+
 class Generator:
     ini_parser: MessageIniParser
     load_fields_links: dict[str, list[typing.Type]]
@@ -35,6 +39,7 @@ class Generator:
         return obj.render_definition()
 
     def write_to_file(self, filename: str):
+        self.check_types()
         self.resolve_dependencies()
 
         print(f"** Render protocol")
@@ -46,6 +51,13 @@ class Generator:
                 if message_code:
                     print(f"Successfully rendered {message_type.__name__}")
                     output.write(message_code + "\n")
+
+    def check_types(self):
+        undefined_list = [rule for rule in self.load_fields_links.keys() if
+                          global_message_manager.get(rule) == None]
+
+        if undefined_list:
+            raise UnresolvedDependencyError(", ".join(undefined_list))
 
     def resolve_dependencies(self):
         self.sorted_messages.clear()
