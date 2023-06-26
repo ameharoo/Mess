@@ -284,6 +284,49 @@ class Float(CppType):
         return ""
 
 
+class FixedN(CppType):
+    def __init__(self, var_name: str, bitness):
+        super().__init__(var_name)
+        self.bitness = bitness
+
+    def render_definition(self):
+        return f"#pragma pack(push, 1)\n" \
+               f"struct {self.render_type_name()} {{\n" \
+               f"    std::int{self.bitness}_t raw;\n" \
+               f"\n" \
+               f"    {self.render_type_name()}(float fl) {{\n" \
+               f"        this->set(fl);\n" \
+               f"    }}\n" \
+               f"\n" \
+               f"    void set(float fl) {{\n" \
+               f"        this->raw = fl * (1 << {int(self.bitness / 2)});\n" \
+               f"    }}\n" \
+               f"\n" \
+               f"    float to_float() {{\n" \
+               f"        return ((float)this->raw) / (1 << {int(self.bitness / 2)});\n" \
+               f"    }}\n" \
+               f"\n" \
+               f"    {self.render_type_name()}& operator= (float source) {{\n" \
+               f"        this->set(source);\n" \
+               f"        return *this;\n" \
+               f"    }}\n" \
+               f"}};\n" \
+               f"#pragma pack(pop)\n"
+
+    def render_type_name(self):
+        return f"Fixed{self.bitness}"
+
+
+class Fixed16(FixedN):
+    def __init__(self, var_name: str):
+        super().__init__(var_name, 16)
+
+
+class Fixed32(FixedN):
+    def __init__(self, var_name: str):
+        super().__init__(var_name, 32)
+
+
 class VarArray(CppType):
     def __init__(self, var_name: str, cpp_type: typing.Type = CppType):
         super().__init__(var_name)
