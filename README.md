@@ -31,6 +31,8 @@ Supported types:
 - Int32
 - Int64
 - Float
+- Fixed16
+- Fixed32
 
 And generic types:
 - VarArray\<Type\>
