@@ -132,10 +132,13 @@ class CppType:
         return (", " + ", ".join(fields_definition)) if fields_definition else ""
 
     def render_initialize_method(self):
+        initialize_self = f"    auto value = ::new(buf) {self.render_type_name()}(); \n"
+        initialize_fields = self.render_initialize_fields()
+
         return f"static void Initialize(std::int8_t* buf{self.render_initialize_arguments()})  {{ \n" \
-               f"    auto value = ::new(buf) {self.render_type_name()}(); \n" \
+               f"{initialize_self if initialize_fields else ''}" \
                f"    // ...\n" \
-               f"{self.render_initialize_fields()}" \
+               f"{initialize_fields}" \
                f"}};\n"
 
     def render_get_alloc_size_method(self):
