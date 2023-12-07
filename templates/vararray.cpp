@@ -1,3 +1,5 @@
+#pragma once
+
 #pragma pack(push, 1)
 
 template<typename T>
@@ -41,3 +43,5 @@ template<typename T>
 constexpr std::int32_t get_vararr_size(std::uint16_t size) {
     return sizeof(VarArray<T>) + (size - 1) * sizeof(T);
 }
+
+#pragma pack(pop)
