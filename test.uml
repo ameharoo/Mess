@@ -1,0 +1,8 @@
+@startuml
+Int16 <|-- VarArray
+T <|-- Color
+T <|-- Color
+T <|-- Color
+Color_Int8_ <|-- Test
+Color_Int16_ <|-- Test
+@enduml
