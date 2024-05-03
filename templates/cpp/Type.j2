@@ -1,0 +1,129 @@
+{% macro var_static_size_name(data) -%}{{ data | message_type | upper }}_STATIC_SIZE{% endmacro %}
+
+{% macro wrap_sizeof(type_name) -%}sizeof({{type_name}}){% endmacro %}
+
+{% macro doc_comment(data) -%}
+{% set doc = data|message_docs %}
+{% set doc_lines = doc.split('\n') %}
+{{ "// " + doc_lines | join('\n// ') }}
+{% endmacro -%}
+
+
+{% block main %}
+
+{% block before_definition %}
+{% block static_size_definition %}
+constexpr size_t {{ var_static_size_name(data) }} = ({{ data | message_novar_fields | map('field_type') | map('wrap', 'sizeof(', ')') | join(' + ') }});
+{% endblock %}
+
+#pragma pack(push, 1)
+{% endblock %}
+
+{% block definition_doc -%}
+    {{ doc_comment(data) }}
+{% endblock %}
+
+{% block definition -%}
+struct {{ data | message_type }} {
+    std::int8_t buffer[{{ var_static_size_name(data) }}];
+
+    {% block fields_definition %}
+    {% for field in data.fields %}
+    {% if field | field_message | message_docs | length > 0 %}
+    {{ doc_comment(field) }}
+    {% endif %}
+    {{ field | field_type }}& {{ field | field_name }}() {
+        {% if loop.index == 1 %}
+        auto& prev = *first();
+        {% else %}
+        auto& prev = {{ data.fields[loop.index - 2] | field_name }}();
+        {% endif %}
+        return *({{ field | field_type }}) (((std::int8_t*) &prev){% if loop.index > 1 %} + sizeof({{ data.fields[loop.index - 2] | field_type }}){% endif %});
+    }
+    {% endfor %}
+    {% endblock %}
+
+    {% block first_method %}
+    std::int8_t* first() {
+       return (std::int8_t*) &buffer[0];
+    }
+    {% endblock %}
+
+    {% block last_method %}
+    std::int8_t* last() {
+        {% if data.fields | length  > 0 %}
+        auto& last = {{ data.fields[-1] | field_name }}();
+        {% else %}
+        auto& last = first();
+        {% endif %}
+        return (std::int8_t*) &last;
+    }
+    {% endblock %}
+
+    {% block end_method %}
+    std::int8_t* end() {
+        auto last_elem = (std::int8_t*) last();
+        return (std::int8_t*) last_elem + sizeof(last_elem);
+    }
+    {% endblock %}
+
+    {% block get_size_method %}
+    std::uint16_t get_size() {
+        return (std::uint16_t) (end() - first());
+    }
+    {% endblock %}
+
+    {% block initialize_method %}
+    static void Initialize(std::int8_t* buf)  {
+        {% set variatives = data | message_var_fields %}
+        {% if variatives | length > 0 %}
+        auto value = ::new(buf) {}();
+        {% endif %}
+        // ...
+        {% for variative in variatives %}
+        {% set field_var_name = variative | field_name + "_field" %}
+        {% set field_size_var_name = variative | field_name + "_field" %}
+
+        // Initialize field "{{ variative | field_name }}"
+        auto {{ field_var_name }} = &value->{{ variative | field_name }}();
+        ::new({{ field_var_name }}) {{ variative | field_type }}({{ field_size_var_name }});
+        {% endfor %}
+    };
+    {% endblock %}
+
+    {% block get_alloc_size_method %}
+    static constexpr size_t get_alloc_size() {
+        return {{ var_static_size_name(data)  }};
+    }
+    {% endblock %}
+
+    {% block allocate_method %}
+    static {{ data | message_type }}* Allocate() {
+        auto alloc_size = get_alloc_size();
+
+        auto buf = new std::int8_t[alloc_size]{0};
+        {{ data | message_type }}::Initialize(buf);
+
+        return ({{ data | message_type }}*) buf;
+    }
+    {% endblock %}
+
+    {% block constructors %}
+    {{ data | message_type }}() = default;
+    {{ data | message_type }}(const {{ data | message_type }}&) = delete;
+    {{ data | message_type }}({{ data | message_type }}&&) = delete;
+    {% endblock %}
+
+    {% block destroy_method %}
+    void destroy() {
+        delete[] (char*) this;
+    }
+    {% endblock %}
+}
+{% endblock %}
+
+{% endblock %}
+
+{% block after_definition %}
+#pragma pack(pop)
+{% endblock %}

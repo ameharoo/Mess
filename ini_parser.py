@@ -1,14 +1,12 @@
 import typing
 
-from message import TypeField, CppType
-from message_manager import global_message_manager
-
+import message
 
 class MessageIniParser:
-    load_fields_links: dict[str, list[typing.Type]]
+    generator: 'Generator'
 
-    def __init__(self):
-        self.load_fields_links = {}
+    def __init__(self, generator: 'Generator'):
+        self.generator = generator
 
     def parse_meta_section(self, name, items):
         key = items[0]
@@ -20,22 +18,22 @@ class MessageIniParser:
                 print(f"** Define protocol {value}")
 
     def declare_message(self, name, items):
-        fields = [TypeField(_type, _name, _doc) for _name, _type, _doc in items]
+        fields = [message.MessageField(_name, _type) for _name, _type, _doc in items]
 
-        cls = type(name, (CppType,), {
-            "render_type_name": lambda self: name,
-            "load_fields": fields,
-            "field_count": len(fields)
-        })
+        # cls = type(name, (message.Message,), {
+        #     "name": name,
+        #     "fields": fields,
+        #     # "field_count": len(fields)
+        # })
 
-        for field in fields:
-            for arg in field.fetch_types():
-                self.load_fields_links.setdefault(arg, []).append(cls)
+        # for field in fields:
+        #     for arg in field.fetch_types():
+        #         self.generator.load_fields_links.setdefault(arg, []).append(cls)
 
         print(f"Declare {name}")
 
-        global_message_manager.register(name, cls)
-        self.load_fields_links.setdefault(name, [])
+        self.generator.message_manager.register(message.Message(name, fields))
+        # self.generator.load_fields_links.setdefault(name, [])
 
     def load(self, data: str):
         current_section = ""
