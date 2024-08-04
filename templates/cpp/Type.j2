@@ -36,7 +36,8 @@ constexpr std::size_t {{ var_static_size_name(msg) }} =
 {%- block definition -%}
 #pragma pack(push, 1)
 struct {{ msg | message_type }} {
-    {%+ include 'cpp/Hashtype.j2' %} protocol_hash = {{ data.protocol_hash }};
+    {% set name = 'protocol_hash' %}
+    {%+ include 'cpp/Hashtype.j2' +%}
     std::int8_t buffer[{{ var_static_size_name(msg) }}];
 
     {% block fields_definition %}

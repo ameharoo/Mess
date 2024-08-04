@@ -134,8 +134,8 @@ class Float(base.Float):
     def get_sizeof_method(self, varname: str) -> str:
         return f"sizeof({varname})"
 
-class Fixed(base.Fixed):
-    name = "Fixed"
+class Fixed16(base.Fixed16):
+    name = "Fixed16"
 
     def __init__(self):
         super().__init__()
@@ -149,6 +149,23 @@ class Fixed(base.Fixed):
     
     def get_sizeof_method(self, varname: str) -> str:
         return f"sizeof({varname})"
+    
+class Fixed32(base.Fixed32):
+    name = "Fixed32"
+
+    def __init__(self):
+        super().__init__()
+
+    def render(self, backend: 'Backend'):
+        return backend.get_template(self.get_render_template()) \
+                      .render(data={'message': self, 'backend': backend})
+    
+    def get_render_template(self) -> str:
+        return "Fixed.j2"
+    
+    def get_sizeof_method(self, varname: str) -> str:
+        return f"sizeof({varname})"
+
 
 class VarArray(base.VarArray):
     name = "VarArray"

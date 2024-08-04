@@ -24,6 +24,7 @@ class Message:
     generic_args: list[GenericArg]
     is_variative: bool = False
     is_user_defined: bool = False
+    is_template: bool = False
     docs: str = ""
 
     def __init__(self, name=None, fields=None, generic_args=None, docs=None):
@@ -43,7 +44,6 @@ class Message:
         self.fields = fields
         self.generic_args = generic_args
         self.docs = docs
-        self.is_user_defined = False
 
     def __copy__(self):
         return type(self)(self.name, self.fields, self.generic_args)
@@ -68,6 +68,9 @@ class Message:
 
     def get_render_template(self) -> str:
         raise NotImplementedError(f"get_render_template for {self.__class__.__name__}")
+
+    def check_definition(self) -> bool:
+        return True
     
 
 class Int8(Message):
@@ -159,17 +162,28 @@ class Float(Message):
     # def render(self, backend: 'Backend') -> str:
     #     raise NotImplementedError(self)
 
-class Fixed(Message):
-    name = "Fixed"
+class Fixed16(Message):
+    name = "Fixed16"
+    bitness = 16
 
     def __init__(self, name = None):
         if name is None:
             name = self.name
         
-        super().__init__(name, [], [
-            GenericArg('Int8'),
-            GenericArg('Int8')
-        ])
+        super().__init__(name)
+
+    # def render(self, backend: 'Backend') -> str:
+    #     raise NotImplementedError(self)
+
+class Fixed32(Message):
+    name = "Fixed32"
+    bitness = 32
+
+    def __init__(self, name = None):
+        if name is None:
+            name = self.name
+        
+        super().__init__(name)
 
     # def render(self, backend: 'Backend') -> str:
     #     raise NotImplementedError(self)
@@ -177,6 +191,7 @@ class Fixed(Message):
 class VarArray(Message):
     name = "VarArray"
     is_variative = True
+    is_template = True
     
     def __init__(self, name = None):
         if name is None:

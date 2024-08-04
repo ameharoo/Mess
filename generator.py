@@ -23,7 +23,8 @@ class Generator:
         "Uint16": messages.base.Uint16,
         "Uint32": messages.base.Uint32,
         "Float": messages.base.Float,
-        # "Fixed": messages.base.Fixed,
+        "Fixed16": messages.base.Fixed16,
+        "Fixed32": messages.base.Fixed32,
         "VarArray": messages.base.VarArray,
     }
 
@@ -66,8 +67,11 @@ class Generator:
             wired_count = 0
             for message in messages:
                 message_type = self.backend.message_manager.get_serialized_message_name(message)
+
+                if not message.check_definition():
+                    raise RuntimeError(f"Invalid definition {message}")
                 
-                if not message.is_user_defined and (message_type == "Message" or message.is_variative and len(message.generic_args) == 0):
+                if not message.is_user_defined and (message_type == "Message" or message.is_template and len(message.generic_args) == 0):
                     print(f"-- Skip template {message_type}")
                     continue
 

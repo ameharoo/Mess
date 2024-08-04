@@ -1,0 +1,31 @@
+#pragma pack(push, 1)
+
+{%- set msg = message %}
+{% set msg_type = msg | message_type %}
+
+struct {{ msg_type }} {
+    std::int{{ msg.bitness }}_t raw;
+
+    {{ msg_type }}(float fl) {
+        this->set(fl);
+    }
+
+    void set(float fl) {
+        this->raw = fl * (1 << {{ msg.bitness // 2 }});
+    }
+
+    float to_float() const {
+        return ((float)this->raw) / (1 << {{ msg.bitness // 2 }});
+    }
+
+    explicit operator float() const {
+        return to_float();
+    }
+
+    {{ msg_type }}& operator= (float source) {
+        this->set(source);
+        return *this;
+    }
+};
+
+#pragma pack(pop)

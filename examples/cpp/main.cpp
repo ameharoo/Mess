@@ -40,6 +40,7 @@ int main() {
     }
 
     // Setting common fields
+    test_message->fixed() = 0.81;
     test_message->foo() = 0x0529BB;
     test_message->bar() = 0x41;
     test_message->f() = 0.3;
@@ -60,14 +61,15 @@ int main() {
     std::cout << "string = " << tmp_string << std::endl;
 
     // Print common fields
-    std::cout << "\nfoo = " << test_message->foo()
+    std::cout << "\nfixed = " << test_message->fixed().to_float()
+              << "\nfoo = " << test_message->foo()
               << "\nbar = " << test_message->bar()
               << "\nf = " << test_message->f()
               << std::endl;
 
     // Just save data to "out.bin"
     std::cout << "\ntest_message total size = " << test_message->get_size() << " bytes\n" 
-              << "hash = " << test_message->protocol_hash
+              << "hash = " << (std::uint64_t) test_message->protocol_hash
               << std::endl;
 
     std::ofstream f("out.bin", std::ios::binary);

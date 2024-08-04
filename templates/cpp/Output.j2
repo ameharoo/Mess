@@ -10,7 +10,8 @@
 {% block messages_block %}
 namespace Mess::{{data.protocol_name or 'Default'}} {
     // Hash of protocol
-    const {% include 'cpp/Hashtype.j2' %} _HASH = {{ data.protocol_hash }};
+    {% set name = '_HASH' %}
+    const {%+ include 'cpp/Hashtype.j2' +%}
 
     {% block messages_definitions %}
     namespace Definitions {
