@@ -1,6 +1,6 @@
 import argparse
 
-from generator import Generator
+from generator import Generator     
 import backend
 
 if __name__ == "__main__":

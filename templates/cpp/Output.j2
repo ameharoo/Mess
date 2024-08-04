@@ -1,0 +1,37 @@
+#pragma once
+
+{% block includes -%}
+#include <cstdint>
+#include <cassert>
+{% endblock %}
+
+{% include 'cpp/Watermark.j2' %}
+
+{% block messages_block %}
+namespace Mess::{{data.protocol_name or 'Default'}} {
+    // Hash of protocol
+    const {% include 'cpp/Hashtype.j2' %} _HASH = {{ data.protocol_hash }};
+
+    {% block messages_definitions %}
+    namespace Definitions {
+    {% for template_name, message in data.messages  %}
+        {%- do data.hook_on_message_render(message) -%}
+        {%- filter trim() | indent(width=8, first=True) %}
+        {% include 'cpp/' + template_name %}
+        {% endfilter +%}
+
+    {% endfor %}
+    }
+    {% endblock%}
+    
+
+    {% for template_name, message in data.messages %}
+        {%- if not message.is_user_defined %}{% continue %}{% endif -%}
+        {% do data.hook_on_message_usings(message) %}
+        {%- filter indent(width=4, first=True) -%}
+        using {{ message | message_pure_type }} = Definitions::{{ message | message_type }};
+        {% endfilter %}
+    {% endfor %}
+}
+{%endblock%}
+ 

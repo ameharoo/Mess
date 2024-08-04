@@ -1,0 +1,17 @@
+{% if data.protocol_hash_bytes_count == 1 %}
+    {% block HashCount1 -%}
+    std::uint8_t
+    {%- endblock %}
+{% elif data.protocol_hash_bytes_count == 2 %}
+    {% block HashCount2 -%}
+    std::uint16_t
+    {%- endblock %}
+{% elif data.protocol_hash_bytes_count == 4 %}
+    {% block HashCount4 -%}
+    std::uint32_t
+    {%- endblock %}
+{% elif data.protocol_hash_bytes_count == 8 %}
+    {% block HashCount8 -%}
+    std::uint64_t
+    {%- endblock %}
+{% endif -%}

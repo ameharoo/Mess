@@ -1,7 +1,27 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.30)
 
-find_package(PythonInterp)
-find_package(Python)
+project(Mess)
+
+if (NOT DEFINED MESS_DIRECTORY)
+    set(MESS_DIRECTORY ${CMAKE_SOURCE_DIR})
+endif()
+
+find_package (Python3 COMPONENTS Interpreter)
+execute_process (COMMAND "${Python3_EXECUTABLE}" -m venv "${MESS_DIRECTORY}/.venv")
+
+# Here is the trick
+## update the environment with VIRTUAL_ENV variable (mimic the activate script)
+set (ENV{VIRTUAL_ENV} "${MESS_DIRECTORY}/.venv")
+## change the context of the search
+set (Python3_FIND_VIRTUALENV FIRST)
+## unset Python3_EXECUTABLE because it is also an input variable (see documentation, Artifacts Specification section)
+unset (Python3_EXECUTABLE)
+## Launch a new search  
+find_package (Python3 COMPONENTS Interpreter Development)
+
+# Install requirements
+execute_process(COMMAND "${Python3_EXECUTABLE}" -m pip install --upgrade pip)
+execute_process(COMMAND "${Python3_EXECUTABLE}" -m pip install -r "${MESS_DIRECTORY}/requirements.txt")
 
 if (DEFINED ESP_PLATFORM)
     if(DEFINED MESS_TARGET)
@@ -10,7 +30,7 @@ if (DEFINED ESP_PLATFORM)
         add_custom_command(OUTPUT "${MESS_TARGET}"
                 DEPENDS "${MESS_SOURCE}"
                 PRE_LINK
-                COMMAND "${python}"
+                COMMAND "${Python3_EXECUTABLE}"
                 "${MESS_DIRECTORY}/mess.py"
                 "${MESS_TARGET}" "${MESS_SOURCE}"
                 WORKING_DIRECTORY
@@ -30,14 +50,17 @@ if (DEFINED ESP_PLATFORM)
 else()
     add_custom_target("mess")
 
-    if (PYTHON_FOUND)
-        add_custom_command(TARGET "mess"
+    if (Python3_FOUND)
+        add_custom_command(OUTPUT "${MESS_TARGET}"
+            DEPENDS 
+                "${MESS_SOURCE}"
+            PRE_LINK
             COMMAND
-               ${PYTHON_EXECUTABLE} ${MESS_DIRECTORY}/mess.py ${MESS_TARGET} ${MESS_SOURCE}
-    #         OUTPUT
-    #            ${MESS_TARGET}
+               "${Python3_EXECUTABLE}" "${MESS_DIRECTORY}/mess.py" "${MESS_TARGET}" "${MESS_SOURCE}"
+            # OUTPUT
+            #    ${MESS_TARGET}
             WORKING_DIRECTORY
-                ${MESS_DIRECTORY}
+                "${CMAKE_SOURCE_DIR}"       
             COMMENT
                 "Mess make a magic now"
         )

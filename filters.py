@@ -1,50 +1,56 @@
-from message import MessageField, Message
+
+from messages.base import Message, MessageField
 
 
 class MessFilters:
+    def __init__(self, jinja_env):
+        self.jinja_env = jinja_env
+
     @classmethod
-    def register(cls, env: 'Environment'):
+    def register(cls, env: 'Environment', backend: 'Backend'):
+        instance = cls(env)
         filters = {
-            'wrap': cls.wrap,
-            'field_name': cls.field_name,
-            'field_type': cls.field_type,
-            'field_message': cls.field_message,
-            'message_type': cls.message_type,
-            'message_var_fields': cls.message_var_fields,
-            'message_novar_fields': cls.message_novar_fields,
-            'message_docs': cls.message_docs,
+            'wrap': instance.wrap,
+            'field_name': instance.field_name,
+            'field_type': instance.field_type,
+            'field_message': instance.field_message,
+            # 'message': instance.message,
+            'message_pure_type': instance.message_pure_type,
+            'message_type': instance.message_type,
+            'message_var_fields': instance.message_var_fields,
+            'message_novar_fields': instance.message_novar_fields,
+            'message_docs': instance.message_docs,
         }
 
         env.filters.update(filters)
+        env.globals['backend'] = backend
 
-    @staticmethod
-    def wrap(s, a, b) -> str:
+    def wrap(self, s, a, b) -> str:
         return str(a) + str(s) + str(b)
 
-    @staticmethod
-    def field_name(field: MessageField) -> str:
+    def field_name(self, field: MessageField) -> str:
         return field.name
 
-    @staticmethod
-    def field_type(field: MessageField) -> str:
-        return field.message.name
+    def field_type(self, field: MessageField) -> str:
+        return self.jinja_env.globals['backend'].mangle_message(field.message)
 
-    @staticmethod
-    def field_message(field: MessageField) -> Message:
+    def field_message(self, field: MessageField) -> Message:
         return field.message
+    
+    # def message(self, data: dict) -> str:
+    #     return data['message']
 
-    @staticmethod
-    def message_type(message: Message) -> str:
+    def message_pure_type(self, message: Message) -> str:
         return message.name
+    
+    def message_type(self, message: Message) -> str:
+        return self.jinja_env.globals['backend'].mangle_message(message)
 
-    @staticmethod
-    def message_docs(message: Message) -> str:
+    def message_docs(self, message: Message) -> str:
         return message.docs
 
-    @staticmethod
-    def message_var_fields(message: Message) -> str:
+    def message_var_fields(self, message: Message) -> str:
         return [field for field in message.fields if field.message.is_variative]
 
-    @staticmethod
-    def message_novar_fields(message: Message) -> str:
+    def message_novar_fields(self, message: Message) -> str:
         return [field for field in message.fields if not field.message.is_variative]

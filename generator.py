@@ -1,90 +1,111 @@
+import datetime
+import hashlib
 import typing
 
 from backend import Backend
 from exceptions import MessageNotFoundError
-import message
 from ini_parser import MessageIniParser
 from message_manager import MessageManager
+import messages.base
 
 
 class Generator:
-    message_manager: MessageManager
+    # message_manager: MessageManager
     ini_parser: MessageIniParser
     backend: Backend
-    # load_fields_links: dict[str, list[typing.Type]]
-    # sorted_messages: list[message.Message]
 
-    builtin_types: dict[str, typing.Type] = {
-        "Int8": message.Int8(),
-        "Int16": message.Int16(),
-        # "Int32": message.Int32,
-        # "Float": message.Float,
-        # "Fixed16": message.Fixed16,
-        # "Fixed32": message.Fixed32,
-        # "VarArray": message.VarArray,
+    builtin_types: dict[str, messages.base.Message] = {
+        "Message": messages.base.Message,
+        "Int8": messages.base.Int8,
+        "Int16": messages.base.Int16,
+        "Int32": messages.base.Int32,
+        "Uint8": messages.base.Uint8,
+        "Uint16": messages.base.Uint16,
+        "Uint32": messages.base.Uint32,
+        "Float": messages.base.Float,
+        # "Fixed": messages.base.Fixed,
+        "VarArray": messages.base.VarArray,
     }
 
     def __init__(self, backend: Backend):
-        self.message_manager = MessageManager()
-        self.populate_builtin_types()
-
-        self.ini_parser = MessageIniParser(self)
+        self.ini_parser = MessageIniParser()
 
         self.backend = backend
+        self.populate_builtin_types()
 
     def populate_builtin_types(self):
         for type_name, type_decl in self.builtin_types.items():
-            self.message_manager.register(type_decl)
+            self.backend.register_message(type_decl())
 
     def load_file(self, filename: str):
         self.ini_parser.load_file(filename)
 
+        for user_message in self.ini_parser.messages:
+            self.backend.register_message(user_message)
+
     def render_message(self, name: str):
-        message = self.message_manager.get(name)
+        message = self.backend.message_manager.get_message(name)
         if message is None:
             raise MessageNotFoundError(name)
         
         return self.backend.render_message(message)
+    
+    def hook(self):
+        print("Hooked!")
 
     def write_to_file(self, filename: str):
-        self.message_manager.resolve_dependencies()
-        # self.check_types()
-        # self.resolve_dependencies()
+        self.backend.message_manager.resolve_dependencies()
+        print("** Resolved dependencies")
 
-        print(self.message_manager.get_all())
+        messages = self.backend.message_manager.get_all()
 
+        
         print(f"** Render protocol")
         with open(filename, "w") as output:
-            for message in self.message_manager.get_all():
-                message_code = self.render_message(message.name)
-                if message_code:
-                    print(f"Successfully rendered {message.name}")
-                    output.write(message_code + "\n")
+            messages_to_render = []
+            wired_count = 0
+            for message in messages:
+                message_type = self.backend.message_manager.get_serialized_message_name(message)
+                
+                if not message.is_user_defined and (message_type == "Message" or message.is_variative and len(message.generic_args) == 0):
+                    print(f"-- Skip template {message_type}")
+                    continue
 
-    # def check_types(self):
-    #     undefined_list = [rule for rule in self.load_fields_links.keys() if self.message_manager.get(rule) is None]
+                if message.is_user_defined:
+                    wired_count += 1
 
-    #     if undefined_list:
-    #         raise UnresolvedDependencyError(", ".join(undefined_list))
+                messages_to_render.append((message.get_render_template(), message))
 
-    # def resolve_dependencies(self):
-    #     self.sorted_messages.clear()
+            render_index = 0
+            def hook_on_message_render(msg):
+                nonlocal render_index, messages_to_render
+                render_index += 1
+                cnt = len(messages_to_render)
+                dig_cnt = len(str(cnt))
+                print(f"[{render_index:0>{dig_cnt}}/{cnt}] Rendered {msg}")
+            
+            wired_index = 0
+            def hook_on_message_usings(msg):
+                nonlocal wired_index, wired_count
+                wired_index += 1
+                dig_cnt = len(str(wired_count))
+                print(f"[{wired_index:0>{dig_cnt}}/{wired_count}] Wired {msg}")
 
-    #     while self.load_fields_links:
-    #         gen_list = [rule for rule in self.load_fields_links.keys() if
-    #                     self.message_manager.get(rule).field_count == 0]
+            protocol_hash_bytes_count = self.ini_parser.hash_bytes_count
+            messages_hash = hashlib.sha256(";".join([str(msg[1]) for msg in messages_to_render]).encode()).digest()
+            protocol_hash = int.from_bytes(messages_hash[:protocol_hash_bytes_count])
 
-    #         if not gen_list:
-    #             exception_text = ", ".join(
-    #                 [rule for rule in self.load_fields_links.keys() if
-    #                  self.message_manager.get(rule).field_count != 0])
 
-    #             raise CyclicDependencyError(exception_text)
-
-    #         for rule in gen_list:
-    #             self.sorted_messages.append(self.message_manager.get(rule))
-
-    #             for referenced_rule in self.load_fields_links[rule]:
-    #                 referenced_rule.field_count -= 1
-
-    #             self.load_fields_links.pop(rule)
+            # message_code = self.render_message(str(message))
+            output_src = self.backend.get_template("Output.j2").render(data={
+                'current_time': str(datetime.datetime.now()),
+                'protocol_name': self.ini_parser.protocol_name,
+                'protocol_hash_bytes_count': protocol_hash_bytes_count,
+                'protocol_hash': protocol_hash,
+                'messages': messages_to_render,
+                'backend': self.backend,
+                'generator': self,
+                'hook_on_message_render': hook_on_message_render,
+                'hook_on_message_usings': hook_on_message_usings,
+            })
+            output.write(output_src + "\n")

@@ -18,12 +18,7 @@
 
 {% block before_definition %}
 {% block static_size_definition %}
-constexpr std::size_t {{ var_static_size_name(msg) }} = 
-{%- if msg | message_novar_fields | length > 0 %}
- ({{ msg | message_novar_fields | map('field_type') | map('wrap', 'sizeof(', ')') | join(' + ') }});
-{%- else %}
- 0;
-{%- endif %}
+constexpr std::size_t {{ var_static_size_name(msg) }} = ({{ msg | message_novar_fields | map('field_type') | map('wrap', 'sizeof(', ')') | join(' + ') }});
 {% endblock %}
 {% endblock %}
 
@@ -40,10 +35,10 @@ struct {{ msg | message_type }} {
     std::int8_t buffer[{{ var_static_size_name(msg) }}];
 
     {% block fields_definition %}
-    {% for field in sorted_fields +%}
-    {% if field | message_docs | length > 0 %}
-    {{ doc_comment(field) | indent() }}
-    {% endif %}
+    {% for field in sorted_fields %}
+    {% if field | field_message | message_docs | length > 0 %}
+    {{+ doc_comment(field) }}
+    {% endif +%}
     {{ field | field_type }}& {{ field | field_name }}() {
         {% if loop.index == 1 %}
         auto& prev = *first();

@@ -2,14 +2,15 @@ import typing
 from dataclasses import dataclass
 
 from exceptions import CyclicDependencyError, UnresolvedDependencyError
-from message import Message
 from topo_sort import TopologicalSort
+
+import messages.base as messages_base
 
 
 class MessageManager:
     sorter: TopologicalSort
-    defined_messages: dict[str, Message]
-    sorted_messages: list[Message]
+    defined_messages: dict[str, messages_base.Message]
+    sorted_messages: list[messages_base.Message]
 
     def __init__(self):
         self.sorter = TopologicalSort()
@@ -18,26 +19,44 @@ class MessageManager:
 
         self._uml = open("test.uml1", "w")
 
-    def register(self, message: Message):
+    def register(self, message: messages_base.Message):
+        assert(not message.name[0].isnumeric())
+        
         self.defined_messages[message.get_serialized_message_name()] = message
 
-        print(self.defined_messages)
+        # print(self.defined_messages)
 
         childs = list(map(lambda x: x.message_name, message.fields))
 
         for child in childs:
-            child_generic_name, child_generic_args = self.deserialize_message_name(child)
-            if not child_generic_args:
-                continue
-
-            self.sorter.add_node(child, [child_generic_name] + child_generic_args)
-
+            self.register_message_name(child)
         self.sorter.add_node(message.name, childs)
 
-        print(f"Registered {message.name}")
+        print(f"* Registered {message.name}" + "".join([f"\n-- {child}" for child in childs]))
+
+    def register_message_name(self, name: str):
+        child_generic_name, child_generic_args = self.deserialize_message_name(name)
+        if not child_generic_args:
+            return
+        
+        # Attempt retrieve variadic message and fill
+        orig_message = self.get(child_generic_name)
+        assert(orig_message is not None)
+        var_message = type(orig_message)() # todo: fix different init signatures
+        # var_message.name = name
+        var_message.generic_args = [messages_base.GenericArg(arg) for arg in child_generic_args]
+        
+        self.defined_messages[name] = var_message
+        
+        self.sorter.add_node(name, child_generic_args)
+        print(f"-- Registered nested {name}")
+        
+        for child in child_generic_args:
+            self.register_message_name(child)
+
 
     @staticmethod
-    def get_serialized_message_name(message: Message):
+    def get_serialized_message_name(message: messages_base.Message):
         return message.get_serialized_message_name()
 
     @staticmethod
@@ -54,34 +73,35 @@ class MessageManager:
 
         return type_name, generic_args
 
-    def get_all(self) -> list[Message]:
+    def get_all(self) -> list[messages_base.Message]:
         return self.sorted_messages
 
-    def get(self, type_name) -> Message:
+    def get(self, type_name) -> messages_base.Message:
         type_name, generic_args = self.deserialize_message_name(type_name)
 
         message = self.defined_messages.get(type_name, None)
+        
+        assert(message is not None)
         if not message:
             return None
 
         return message
 
-    def get_message(self, type_name) -> Message:
+    def get_message(self, type_name) -> messages_base.Message:
         msg = self.defined_messages.get(type_name, None)
         if msg is None:
             return None
 
-        return msg.message
-
-    def check_messages_defined(self):
-        undefined_list = [rule for rule in self.load_fields_links.keys() if self.get(rule) is None]
-
-        if undefined_list:
-            raise UnresolvedDependencyError(", ".join(undefined_list))
+        return msg
         
-    def make_fields_init(self, message: Message):
+    def make_fields_init(self, message: messages_base.Message):
         for field in message.fields:
-            field.message = self.defined_messages.get(field.message_name)
+            field.message = self.get_message(field.message_name)
+            assert(field.message is not None)
+
+        for arg in message.generic_args:
+            arg.message = self.get_message(arg.name)
+            assert(arg.message is not None)
 
     def resolve_dependencies(self):
         self.sorted_messages.clear()
@@ -91,7 +111,7 @@ class MessageManager:
                 print(f"Warning: {node}")
                 continue
 
-            msg = self.defined_messages.get(node)
+            msg = self.get_message(node)
 
             self.sorted_messages.append(msg)
 
@@ -99,7 +119,7 @@ class MessageManager:
 
         self._uml.write("@startuml\n")
         for parent, msg in self.defined_messages.items():
-            parent_name = parent.replace('<', '_').replace('>', '_')
+            parent_name = parent.replace('<', '\\<').replace('>', '\\>')
             for child in msg.fields:
                 child_name = child.message_name.replace('<', '_').replace('>', '_')
                 self._uml.write(f"{child_name} <|-- {parent_name}\n")

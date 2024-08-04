@@ -5,15 +5,21 @@ Supported backends:
 - Python (in progress)
 - C# (in progress)
 - PHP (in progress)
+- ImHex Pattern Language (in progress)
 
 ## Message declaration
 Message is described using ini-like format like this:
 ```ini
+[.Protocol]
+name = TestProto
+hash_bytes_count = 1
+
 [Color]
 r = Int8
 g = Int8
 b = Int8
 
+# My awesome message <3
 [MessageName]
 field_char = Int8
 field2_long = Int64
@@ -31,8 +37,8 @@ Supported types:
 - Int32
 - Int64
 - Float
-- Fixed16
-- Fixed32
+- Fixed16 (currently anavailable, possible rename)
+- Fixed32 (currently anavailable, possible rename)
 
 And generic types:
 - VarArray\<Type\>

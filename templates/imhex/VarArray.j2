@@ -13,7 +13,7 @@ struct {{ msg_type }} {
         auto value = ::new(buf) {{ msg_type  }}(size);
         {% if T_Message.is_user_defined %}
         for (auto i = 0; i < size; ++i) {
-            {{ T }}::Initialize((std::int8_t*) value->get(i));
+            {{ T }}::Initialize((std::int8_t*) value->get(i)                                                                                                    );
         }
         {% endif %}
     };
@@ -52,6 +52,6 @@ struct {{ msg_type }} {
 
 std::int32_t get_vararr_size(const {{ msg_type }}& arr) {
     assert(arr.size > 0);
-    return sizeof({{ msg_type }}) + (arr.size - 1) * {{ T_Message.get_sizeof_method("arr.values[0]") }};
+    return sizeof({{ msg_type }}) + (arr.size - 1) * {{ T_Message.get_sizeof_method(T) }};
 }
 #pragma pack(pop)

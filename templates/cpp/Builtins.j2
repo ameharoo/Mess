@@ -1,0 +1,37 @@
+{% set msg = message %}
+{% set msg_type = msg | message_pure_type -%}
+
+{% macro render(type) %}
+{% if type == 'Int8' %}
+    {% block Int8 -%}
+    using {{ msg | message_type }} = std::int8_t;
+    {%- endblock %}
+{% elif type == 'Uint8' %}
+    {% block Uint8 -%}
+    using {{ msg | message_type }} = std::uint8_t;
+    {%- endblock %}
+{% elif type == 'Int16' %}
+    {% block Int16 -%}
+    using {{ msg | message_type }} = std::int16_t;
+    {%- endblock %}
+{% elif type == 'Uint16' %}
+    {% block Uint16 -%}
+    using {{ msg | message_type }} = std::uint8_t;
+    {%- endblock %}
+{% elif type == 'Int32' %}
+    {% block Int32 -%}
+    using {{ msg | message_type }} = std::int32_t;
+    {%- endblock %}
+{% elif type == 'Uint32' %}
+    {% block Uint32 -%}
+    using {{ msg | message_type }} = std::uint32_t;
+    {%- endblock %}
+{% elif type == 'Float' %}
+    {% block Float -%}
+    using {{ msg | message_type }} = float;
+    {%- endblock %}
+{% endif %}
+{% endmacro %}
+
+/* Builtin: {{ msg_type }} */
+{{ render(msg_type) }}
