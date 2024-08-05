@@ -6,6 +6,10 @@ if (NOT DEFINED MESS_DIRECTORY)
     set(MESS_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 
+if (NOT DEFINED MESS_BACKEND)
+    set(MESS_BACKEND "cpp")
+endif()
+
 find_package (Python3 COMPONENTS Interpreter)
 execute_process (COMMAND "${Python3_EXECUTABLE}" -m venv "${MESS_DIRECTORY}/.venv")
 
@@ -32,6 +36,7 @@ if (DEFINED ESP_PLATFORM)
                 PRE_LINK
                 COMMAND "${Python3_EXECUTABLE}"
                 "${MESS_DIRECTORY}/mess.py"
+                "${MESS_BACKEND}"
                 "${MESS_TARGET}" "${MESS_SOURCE}"
                 WORKING_DIRECTORY
                 "${MESS_DIRECTORY}")
@@ -56,7 +61,8 @@ else()
                 "${MESS_SOURCE}"
             PRE_LINK
             COMMAND
-               "${Python3_EXECUTABLE}" "${MESS_DIRECTORY}/mess.py" "${MESS_TARGET}" "${MESS_SOURCE}"
+               "${Python3_EXECUTABLE}" "${MESS_DIRECTORY}/mess.py"
+                "${MESS_BACKEND}" "${MESS_TARGET}" "${MESS_SOURCE}"
             # OUTPUT
             #    ${MESS_TARGET}
             WORKING_DIRECTORY
