@@ -5,7 +5,7 @@ Supported backends:
 - Python (in progress)
 - C# (in progress)
 - PHP (in progress)
-- ImHex Pattern Language (in progress)
+- ImHex Pattern Language
 
 ## Message declaration
 Message is described using ini-like format like this:
