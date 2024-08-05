@@ -5,7 +5,9 @@
 {% macro doc_comment(msg) -%}
 {% set doc = msg|message_docs %}
 {% set doc_lines = doc.split('\n') %}
-{{ "// " + doc_lines | join('\n// ') }}
+{% if doc_lines | length > 1%}
+{{ "// " + doc_lines[:-1] | join('\n// ') }}
+{% endif %}
 {% endmacro -%}
 
 
