@@ -1,17 +1,23 @@
+{% block hashtype %}
 {% if data.protocol_hash_bytes_count == 1 %}
     {% block HashCount1 -%}
-    std::uint8_t
+    u8
     {%- endblock %}
 {% elif data.protocol_hash_bytes_count == 2 %}
     {% block HashCount2 -%}
-    std::uint16_t
+    u16
     {%- endblock %}
 {% elif data.protocol_hash_bytes_count == 4 %}
     {% block HashCount4 -%}
-    std::uint32_t
+    u32
     {%- endblock %}
 {% elif data.protocol_hash_bytes_count == 8 %}
     {% block HashCount8 -%}
-    std::uint64_t
+    u64
     {%- endblock %}
-{% endif -%}
+{% endif %}
+{% endblock -%}
+{% block hash_assignment %}
+ {{ name }}{% if is_assign %} = {{ data.protocol_hash }}{% endif %}
+{%- endblock -%}
+;

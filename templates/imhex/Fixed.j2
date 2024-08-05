@@ -1,0 +1,6 @@
+{%- set msg = message %}
+{% set msg_type = msg | message_type %}
+
+struct {{ msg_type }} {
+    u{{ msg.bitness }} raw;
+};

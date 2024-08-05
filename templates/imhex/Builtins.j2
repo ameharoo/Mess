@@ -4,27 +4,27 @@
 {% macro render(type) %}
 {% if type == 'Int8' %}
     {% block Int8 -%}
-    using {{ msg | message_type }} = std::int8_t;
+    using {{ msg | message_type }} = s8;
     {%- endblock %}
 {% elif type == 'Uint8' %}
     {% block Uint8 -%}
-    using {{ msg | message_type }} = std::uint8_t;
+    using {{ msg | message_type }} = u8;
     {%- endblock %}
 {% elif type == 'Int16' %}
     {% block Int16 -%}
-    using {{ msg | message_type }} = std::int16_t;
+    using {{ msg | message_type }} = s16;
     {%- endblock %}
 {% elif type == 'Uint16' %}
     {% block Uint16 -%}
-    using {{ msg | message_type }} = std::uint8_t;
+    using {{ msg | message_type }} = u16;
     {%- endblock %}
 {% elif type == 'Int32' %}
     {% block Int32 -%}
-    using {{ msg | message_type }} = std::int32_t;
+    using {{ msg | message_type }} = s32;
     {%- endblock %}
 {% elif type == 'Uint32' %}
     {% block Uint32 -%}
-    using {{ msg | message_type }} = std::uint32_t;
+    using {{ msg | message_type }} = u32;
     {%- endblock %}
 {% elif type == 'Float' %}
     {% block Float -%}
@@ -33,5 +33,5 @@
 {% endif %}
 {% endmacro %}
 
-/* Builtin: {{ msg_type }} */
+// Builtin: {{ msg_type }}
 {{ render(msg_type) }}

@@ -1,11 +1,9 @@
-{% macro var_static_size_name(msg) -%}{{ msg | message_type | upper }}_STATIC_SIZE{% endmacro %}
-
-{% macro wrap_sizeof(type_name) -%}sizeof({{type_name}}){% endmacro %}
-
 {% macro doc_comment(msg) -%}
 {% set doc = msg|message_docs %}
 {% set doc_lines = doc.split('\n') %}
-{{ "// " + doc_lines | join('\n// ') }}
+{% if doc_lines | length > 1%}
+{{ "// " + doc_lines[:-1] | join('\n// ') }}
+{% endif %}
 {% endmacro -%}
 
 
@@ -17,9 +15,6 @@
 {% block main %}
 
 {% block before_definition %}
-{% block static_size_definition %}
-constexpr std::size_t {{ var_static_size_name(msg) }} = ({{ msg | message_novar_fields | map('field_type') | map('wrap', 'sizeof(', ')') | join(' + ') }});
-{% endblock %}
 {% endblock %}
 
 {%+ block definition_doc -%}
@@ -29,129 +24,19 @@ constexpr std::size_t {{ var_static_size_name(msg) }} = ({{ msg | message_novar_
 {% endblock %}
 
 {%- block definition -%}
-#pragma pack(push, 1)
 struct {{ msg | message_type }} {
-    {%+ include 'cpp/Hashtype.j2' %} protocol_hash = {{ data.protocol_hash }};
-    std::int8_t buffer[{{ var_static_size_name(msg) }}];
+    {% set name = 'protocol_hash' %}
+    {%+ include 'imhex/Hashtype.j2' +%}
 
     {% block fields_definition %}
     {% for field in sorted_fields %}
-    {% if field | field_message | message_docs | length > 0 %}
-    {{+ doc_comment(field) }}
-    {% endif +%}
-    {{ field | field_type }}& {{ field | field_name }}() {
-        {% if loop.index == 1 %}
-        auto& prev = *first();
-        {% else %}
-        auto& prev = {{ sorted_fields[loop.index - 2] | field_name }}();
-        {% endif %}
-        return *({{ field | field_type }}*) (((std::int8_t*) &prev){% if loop.index > 1 %} + {{ (sorted_fields[loop.index - 2] | field_message).get_sizeof_method("prev")}}{% endif %});
-    }
+    {% if field | message_docs | length > 0 +%}
+    {{ doc_comment(field) | indent() }}
+    {%- endif %}
+    {{ field | field_type }} {{ field | field_name }};
     {% endfor %}
     {% endblock %}
-
-    {% block first_method %}
-    std::int8_t* first() {
-       return (std::int8_t*) &buffer[0];
-    }
-    {% endblock %}
-
-    {% block last_method %}
-    std::int8_t* last() {
-        {% if sorted_fields | length  > 0 %}
-        auto& last = {{ sorted_fields[-1] | field_name }}();
-        {% else %}
-        auto& last = first();
-        {% endif %}
-        return (std::int8_t*) &last;
-    }
-    {% endblock %}
-
-    {% block end_method %}
-    std::int8_t* end() {
-        {% set last_field = sorted_fields[::-1][0] %}
-        {% set last_field_message = last_field | field_message %}
-        {% set last_field_message_type = last_field_message | message_type %}
-        auto& last = {{ last_field | field_name }}();
-        return (std::int8_t*) &last + {{last_field_message.get_sizeof_method("last")}};
-    }
-    {% endblock %}
-
-    {% block get_size_method %}
-    std::uint16_t get_size() {
-        return (std::uint16_t) (end() - first());
-    }
-    {% endblock %}
-
-    {% block initialize_method %}
-    {% set variatives = msg | message_var_fields %}
-    {% macro field_var_sizes() %}
-        {% for variative in variatives -%}
-            {% set field_size_var_name = "size_" + variative | field_name -%}
-            , std::uint16_t {{field_size_var_name}}
-        {%- endfor %}
-    {% endmacro%}
-    static void Initialize(std::int8_t* buf{{field_var_sizes()}})  {
-        {#{% if variatives | length > 0 %}#}
-        auto value = ::new(buf) {{ msg | message_type }}();
-        assert(value->protocol_hash == ::Mess::{{data.protocol_name}}::_HASH);
-        {#{% endif %}#}
-        // ...
-        {% for variative in variatives %}
-        {% set field_var_name = variative | field_name + "_field" %}
-        {% set field_size_var_name = "size_" + variative | field_name %}
-
-        // Initialize field "{{ variative | field_name }}"
-        auto {{ field_var_name }} = &value->{{ variative | field_name }}();
-        {#::new({{ field_var_name }}) {{ variative | field_type }}({{ field_size_var_name }});#}
-        {{ variative | field_type }}::Initialize((std::int8_t*) {{ field_var_name }}, {{ field_size_var_name }});
-        {% endfor %}
-    };
-    {% endblock %}
-
-    {% block get_alloc_size_method %}
-    static constexpr std::size_t get_alloc_size() {
-        return {{ var_static_size_name(msg)  }};
-    }
-    {% endblock %}
-
-    {% block allocate_method %}
-    {% set variatives = msg | message_var_fields %}
-    {% macro field_var_sizes() %}
-        {% for variative in variatives -%}
-            {% set field_size_var_name = "size_" + variative | field_name -%}
-            {% if loop.index > 1 %}, {% endif %}std::uint16_t {{field_size_var_name}}
-        {%- endfor %}
-    {% endmacro%}
-    {% macro field_var_sizes_call() %}
-        {% for variative in variatives -%}
-            {% set field_size_var_name = "size_" + variative | field_name -%}
-            , {{field_size_var_name}}
-        {%- endfor %}
-    {% endmacro%}
-    static {{ msg | message_type }}* Allocate({{field_var_sizes()}}) {
-        auto alloc_size = get_alloc_size();
-
-        auto buf = new std::int8_t[alloc_size]{0};
-        {{ msg | message_type }}::Initialize(buf{{field_var_sizes_call()}});
-
-        return ({{ msg | message_type }}*) buf;
-    }
-    {% endblock %}
-
-    {% block constructors %}
-    {{ msg | message_type }}() = default;
-    {{ msg | message_type }}(const {{ msg | message_type }}&) = delete;
-    {{ msg | message_type }}({{ msg | message_type }}&&) = delete;
-    {% endblock %}
-
-    {% block destroy_method %}
-    void destroy() {
-        delete[] (char*) this;
-    }
-    {% endblock %}
 };
-#pragma pack(pop)
 {% endblock %}
 
 {% endblock %}
