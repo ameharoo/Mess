@@ -1,21 +1,27 @@
 
 Output:
 ```shell
-arr.size = 5                      
-arr[0] = 0                        
-arr[1] = 1                        
-arr[2] = 2                        
-arr[3] = 3                        
-arr[4] = 4                        
-                                  
-string.size = 12                  
-string = Hello world!             
-                                  
-foo = 338363                      
-bar = ☺                           
-kek = 0.3                         
-                                  
-test_message total size = 49 bytes
+arr.size = 5
+arr[0] = 0
+arr[1] = 1
+arr[2] = 2
+arr[3] = 3
+arr[4] = 4
+
+colors.size = 100
+sizeof(colors) = 402
+sizeof(colors[0]) = 3
+
+string.size = 12
+string = Hello world!
+
+fixed = 0.809998
+foo = 338363
+bar = A
+f = 0.3
+
+test_message total size = 451 bytes
+hash = 250
 ```
 
 out.bin

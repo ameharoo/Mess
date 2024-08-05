@@ -51,6 +51,11 @@ int main() {
     for(int i=0; i<test_message->arr().size; ++i)
         std::cout << "arr[" << i << "] = " << test_message->arr()[i] << std::endl;
 
+    // Print "colors" elements
+    std::cout   << "\ncolors.size = " << test_message->colors().size 
+                << "\nsizeof(colors) = " << test_message->colors().get_size()
+                << "\nsizeof(colors[0]) = " << test_message->colors()[0].get_size() << std::endl;
+
     // Print "string" field like a string
     std::cout << "\nstring.size = " << test_message->string().size << std::endl;
 
