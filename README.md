@@ -2,7 +2,7 @@
 are extensible and language-neutral Mess(-ages Embedded Style Serialization).  
 Supported backends:
 - C++
-- Python (in progress)
+- Python
 - C# (in progress)
 - PHP (in progress)
 - ImHex Pattern Language

@@ -116,3 +116,10 @@ class ImHexBackend(Backend):
     
     def render_message(self, message:  messages_base.Message):
         return super().render_message(message)
+
+class PythonBackend(Backend):
+    name = "python"
+    path_to_templates = "python/"
+    
+    def render_message(self, message:  messages_base.Message):
+        return super().render_message(message)
