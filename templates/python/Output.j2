@@ -1,0 +1,36 @@
+{% block includes -%}
+import struct
+import dataclasses
+from typing import Self
+{% endblock %}
+
+{% include 'python/Watermark.j2' %}
+
+{% block messages_block %}
+# todo namespaces in python backend
+# Namespace: {{data.protocol_name or 'Default'}}
+
+# Hash of protocol
+{%+ block hash -%}
+    protocol_hash: int = {{ data.protocol_hash }}
+{% endblock %}
+
+{% include 'python/Message.j2' +%}
+
+{% block messages_definitions %}
+{% for template_name, message in data.messages %}
+    {%- do data.hook_on_message_render(message) -%}
+    {% filter trim() %}
+    {% include 'python/' + template_name %}
+    {% endfilter +%}
+    
+{% endfor %}
+{% endblock%}
+
+{% for template_name, message in data.messages -%}
+    {%- if not message.is_user_defined %}{% continue %}{% endif -%}
+    {%- do data.hook_on_message_usings(message) -%}
+    {{ message | message_pure_type }} = {{ message | message_type }}
+{% endfor %}
+{%endblock%}
+ 

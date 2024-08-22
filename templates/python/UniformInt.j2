@@ -1,0 +1,55 @@
+{% set msg = message %}
+{% set msg_type = msg | message_pure_type -%}
+{% set msg_mangled_type = msg | message_type -%}
+
+{% set size_in_bytes = 1 %}
+{% set is_signed = True %}
+
+{% if msg_type == 'Int8' %}
+    {% set size_in_bytes = 1 %}
+    {% set is_signed = True %}
+{% elif msg_type == 'Uint8' %}
+    {% set size_in_bytes = 1 %}
+    {% set is_signed = False %}
+{% elif msg_type == 'Int16' %}
+    {% set size_in_bytes = 2 %}
+    {% set is_signed = True %}
+{% elif msg_type == 'Uint16' %}
+    {% set size_in_bytes = 2 %}
+    {% set is_signed = False %}
+{% elif msg_type == 'Int32' %}
+    {% set size_in_bytes = 4 %}
+    {% set is_signed = True %}
+{% elif msg_type == 'Uint32' %}
+    {% set size_in_bytes = 4 %}
+    {% set is_signed = False %}
+{% endif %}
+
+# todo: add validators to check int size
+@dataclasses.dataclass
+class {{ msg_mangled_type }}(BaseMessage):
+    value: int
+
+    # Override validation method of BaseMessage
+    # checks int byte size
+    {% if size_in_bytes == 1 %}
+    # cast char (str) to int8
+    {% endif %}
+    # todo: checks also sign?
+    def __setattr__(self, name, value):
+        if name == 'value' and type(value) == int and (value.bit_length() + 7) // 8 > {{ size_in_bytes }}:
+            raise ValueError(f"Invalid value ({value}) for {type(self)}")
+        {% if size_in_bytes == 1 %}
+        if name == 'value' and type(value) == str and len(value) == 1:
+            value = ord(value[0])
+        {% endif %}
+
+        super().__setattr__(name, value)
+
+    def to_bytes(self) -> bytes:
+        return int(self.value).to_bytes({{ size_in_bytes }}, "little", signed={{ 'True' if is_signed else 'False' }})
+    
+    @classmethod
+    def from_bytes(cls, buffer: bytes) -> tuple[Self, int]:
+        return cls(int.from_bytes(buffer[:{{ size_in_bytes }}], "little", signed={{ 'True' if is_signed else 'False' }})),{{ size_in_bytes }}
+

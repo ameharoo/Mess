@@ -1,0 +1,15 @@
+{% set msg = message %}
+{% set msg_type = msg | message_pure_type -%}
+{% set msg_mangled_type = msg | message_type -%}
+
+
+@dataclasses.dataclass
+class {{ msg_mangled_type }}(BaseMessage):
+    value: float
+
+    def to_bytes(self) -> bytes:
+        return struct.pack("<f", self.value)
+    
+    @classmethod
+    def from_bytes(cls, buffer: bytes) -> tuple[Self, int]:
+        return {{ msg_mangled_type }}(struct.unpack("<f", buffer[:4])[0]),4

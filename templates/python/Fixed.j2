@@ -1,0 +1,25 @@
+{%- set msg = message %}
+{% set msg_type = msg | message_pure_type %}
+{% set msg_mangled_type = msg | message_type %}
+
+{% set size_in_bytes = 0 %}
+
+{% if msg_type == 'Fixed16' %}
+    {% set size_in_bytes = 2 %}
+{% elif msg_type == 'Fixed32' %}
+    {% set size_in_bytes = 4 %}
+{% endif %}
+
+@dataclasses.dataclass
+class {{ msg_mangled_type }}(BaseMessage):
+    value: float
+
+    def to_bytes(self) -> bytes:
+        return int(self.value * (1 << {{ msg.bitness // 2 }})).to_bytes({{ size_in_bytes }}, "little")
+    
+    @classmethod
+    def from_bytes(cls, buffer: bytes) -> tuple[Self, int]:
+        raw = int.from_bytes(buffer[:{{ size_in_bytes }}], "little")
+        return cls(float(raw) / (1 << {{ msg.bitness // 2 }})),{{ size_in_bytes }}
+
+

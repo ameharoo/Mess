@@ -1,0 +1,42 @@
+{% macro doc_comment(msg) -%}
+{% set doc = msg|message_docs %}
+{% set doc_lines = doc.split('\n') %}
+{% if doc_lines | length > 1%}
+{{ "# " + doc_lines[:-1] | map('trim') | join('\n# ') }}
+{% endif %}
+{% endmacro -%}
+
+
+{% set msg = message %}
+{# First simple fields (non variative), then complex, variative #}
+{% set sorted_fields = msg.fields | sort(attribute="message.is_variative") %}
+
+
+{% block main %}
+
+{% block before_definition %}
+{% endblock %}
+
+{%+ block definition_doc -%}
+    {% if msg | message_docs | length > 0 %}
+    {{ doc_comment(msg) }}
+    {% endif %}
+{% endblock %}
+
+{%- block definition -%}
+@dataclasses.dataclass
+class {{ msg | message_type }}(BaseMessage):
+    {% block fields_definition %}
+    {% for field in sorted_fields %}
+    {% if field | message_docs | length > 0 %}
+    {{ doc_comment(field) | indent()}}
+    {%- endif %}
+    {{ field | field_name }}: {{ field | field_type }}
+    {% endfor %}
+    {% endblock %} 
+{%+ endblock %}
+
+{% endblock %}
+
+{% block after_definition %}
+{% endblock %}

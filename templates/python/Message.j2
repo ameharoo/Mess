@@ -1,0 +1,49 @@
+@dataclasses.dataclass(kw_only=True)
+class BaseMessage:
+    {% block hash %}
+    protocol_hash: int = {{ data.protocol_hash }}
+    {%- endblock %} 
+
+    def __init__(self):
+        pass
+
+    # Validation and implicit cast if possible
+    def __setattr__(self, name, value):
+        if name != 'protocol_hash' and type(value) != self.__annotations__[name]:
+            value = self.__annotations__[name](value)
+
+        self.__dict__[name] = value
+
+    def to_bytes(self) -> bytes:
+        buffer = bytearray()
+        buffer += int(self.protocol_hash).to_bytes({{ data.protocol_hash_bytes_count }}, "little")
+
+        field_types = {field.name: field.type for field in dataclasses.fields(type(self))}
+        for field_name, field_type in field_types.items():
+            if field_name == "protocol_hash":
+                continue
+
+            field_message: Self = getattr(self, field_name)
+            assert issubclass(type(field_message), BaseMessage), f"Wrong type {field_message} must be {field_type} ihnerited from BaseMessage"
+            buffer += field_message.to_bytes()
+
+        return bytes(buffer)
+    
+    @classmethod
+    def from_bytes(cls, buffer: bytes) -> tuple[Self, int]:
+        _protocol_hash = int.from_bytes(buffer[:{{ data.protocol_hash_bytes_count }}], "little")
+
+        offset = {{ data.protocol_hash_bytes_count }}
+
+        field_values = []
+        field_types: dict[str, Self] = {field.name: field.type for field in dataclasses.fields(cls)}
+        for field_name, field_type in field_types.items():
+            if field_name == "protocol_hash":
+                continue
+
+            assert issubclass(field_type, BaseMessage), f"Wrong type {field_type} must be ihnerited from BaseMessage"
+            field_message, _offset = field_type.from_bytes(buffer[offset:])
+            field_values.append(field_message)
+            offset += _offset
+        
+        return cls(*field_values, protocol_hash=_protocol_hash), offset
