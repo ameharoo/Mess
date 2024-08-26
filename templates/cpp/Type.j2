@@ -60,7 +60,7 @@ struct {{ msg | message_type }} {
 
     {% block first_method %}
     std::int8_t* first() {
-       return (std::int8_t*) &buffer[0];
+       return (std::int8_t*) &protocol_hash;
     }
     {% endblock %}
 
