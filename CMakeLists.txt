@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.20)
 
-project(Mess)
 
 if (NOT DEFINED MESS_DIRECTORY)
     set(MESS_DIRECTORY ${CMAKE_SOURCE_DIR})
