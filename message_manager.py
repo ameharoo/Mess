@@ -17,8 +17,6 @@ class MessageManager:
         self.defined_messages = {}
         self.sorted_messages = []
 
-        self._uml = open("test.uml1", "w")
-
     def register(self, message: messages_base.Message):
         assert(not message.name[0].isnumeric())
         
@@ -117,10 +115,3 @@ class MessageManager:
 
             self.make_fields_init(msg)
 
-        self._uml.write("@startuml\n")
-        for parent, msg in self.defined_messages.items():
-            parent_name = parent.replace('<', '\\<').replace('>', '\\>')
-            for child in msg.fields:
-                child_name = child.message_name.replace('<', '_').replace('>', '_')
-                self._uml.write(f"{child_name} <|-- {parent_name}\n")
-        self._uml.write("@enduml\n")
