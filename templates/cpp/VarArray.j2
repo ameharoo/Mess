@@ -45,13 +45,11 @@ struct {{ msg_type }} {
     }
 
     static constexpr std::int32_t get_vararr_size(std::uint16_t size) {
-        assert(size > 0);
         return sizeof({{ msg_type }}) + (size - 1) * {{ T_Message.get_sizeof_method(T) }};
     }
 };
 
 std::int32_t get_vararr_size(const {{ msg_type }}& arr) {
-    assert(arr.size > 0);
     return sizeof({{ msg_type }}) + (arr.size - 1) * {{ T_Message.get_sizeof_method("arr.values[0]") }};
 }
 #pragma pack(pop)
