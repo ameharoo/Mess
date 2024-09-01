@@ -2,6 +2,8 @@ from messages import base
 
 
 class Message(base.Message):
+    is_complex_type: bool = False
+
     def __init__(self, name=None, fields=None, generic_args=None, docs=None):
         super().__init__(name, fields, generic_args, docs)
 
@@ -135,6 +137,7 @@ class Float(base.Float):
         return f"sizeof({varname})"
 
 class Fixed16(base.Fixed16):
+    is_complex_type = True
     name = "Fixed16"
 
     def __init__(self):
@@ -151,6 +154,7 @@ class Fixed16(base.Fixed16):
         return f"sizeof({varname})"
     
 class Fixed32(base.Fixed32):
+    is_complex_type = True
     name = "Fixed32"
 
     def __init__(self):
@@ -168,6 +172,7 @@ class Fixed32(base.Fixed32):
 
 
 class VarArray(base.VarArray):
+    is_complex_type = True
     name = "VarArray"
     is_variative = True
     
