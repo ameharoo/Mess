@@ -11,11 +11,13 @@ struct {{ msg_type }} {
 
     static void Initialize(std::int8_t* buf, std::uint16_t size)  {
         auto value = ::new(buf) {{ msg_type  }}(size);
+        {#
         {% if T_Message.is_user_defined %}
         for (auto i = 0; i < size; ++i) {
             {{ T }}::Initialize((std::int8_t*) value->get(i));
         }
         {% endif %}
+        #}
     };
 
     static {{ msg_type }}* Allocate(uint16_t size) {
