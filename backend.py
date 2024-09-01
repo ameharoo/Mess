@@ -1,3 +1,4 @@
+import argparse
 import inspect
 import os
 import pkgutil
@@ -32,6 +33,12 @@ class Backend:
         MessFilters.register(self.jinja_env, self)
 
         self.register_implementations()
+
+    def get_arguments() -> argparse.ArgumentParser:
+        return argparse.ArgumentParser(add_help=False)
+    
+    def process_arguments(self, args=dict[str, str]):
+        pass
 
     def register_implementations(self):
         self.implementations = self.get_implementations()
@@ -106,6 +113,16 @@ class CppBackend(Backend):
     name = "cpp"
     path_to_templates = "cpp/"
     builtin_messages = ["Int8", "Int16", "Int32", "Int64"]
+    use_highlevel_api = False
+
+    @classmethod
+    def get_arguments(cls) -> argparse.ArgumentParser:
+        parser = super().get_arguments()
+        parser.add_argument('-hl', '--highlevel-api', help="Enable highlevel API", action='store_true')
+        return parser
+
+    def process_arguments(self, args):
+        self.use_highlevel_api = args['highlevel_api']
 
     def render_message(self, message:  messages_base.Message):
         return super().render_message(message)
