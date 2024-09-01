@@ -9,6 +9,16 @@ if (NOT DEFINED MESS_BACKEND)
     set(MESS_BACKEND "cpp")
 endif()
 
+if (NOT DEFINED MESS_ADDITIONAL_ARGS)
+    set(MESS_ADDITIONAL_ARGS "")
+endif()
+
+if (MESS_BACKEND STREQUAL "cpp")
+    if(DEFINED MESS_CPP_HIGHLEVEL_API)
+        set(MESS_ADDITIONAL_ARGS ${MESS_ADDITIONAL_ARGS} "-hl")
+    endif()
+endif()
+
 find_package (Python3 COMPONENTS Interpreter)
 execute_process (COMMAND "${Python3_EXECUTABLE}" -m venv "${MESS_DIRECTORY}/.venv")
 
@@ -62,6 +72,7 @@ else()
             COMMAND
                "${Python3_EXECUTABLE}" "${MESS_DIRECTORY}/mess.py"
                 "${MESS_BACKEND}" "${MESS_TARGET}" "${MESS_SOURCE}"
+                ${MESS_ADDITIONAL_ARGS}
             # OUTPUT
             #    ${MESS_TARGET}
             WORKING_DIRECTORY
