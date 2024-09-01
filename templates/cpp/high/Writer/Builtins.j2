@@ -1,0 +1,26 @@
+{% set msg = message %}
+{% set msg_type = msg | message_pure_type -%}
+
+{% set builtin = "" %}
+
+{% if msg_type == 'Int8' %}
+    {% set builtin = "std::int8_t" %}
+{% elif msg_type == 'Uint8' %}
+    {% set builtin = "std::uint8_t" %}
+{% elif msg_type == 'Int16' %}
+    {% set builtin = "std::int16_t" %}
+{% elif msg_type == 'Uint16' %}
+    {% set builtin = "std::uint16_t" %}
+{% elif msg_type == 'Int32' %}
+    {% set builtin = "std::int32_t" %}
+{% elif msg_type == 'Uint32' %}
+    {% set builtin = "std::uint32_t" %}
+{% elif msg_type == 'Float' %}
+    {% set builtin = "float" %}
+{% endif %}
+
+/* Builtin: {{ msg_type }} */
+
+static std::vector<char> write({{ builtin }} value) {
+    return {(char*) &value, (char*) &value + sizeof({{ builtin }})};
+}

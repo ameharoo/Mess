@@ -1,0 +1,24 @@
+{% from 'cpp/Hashtype.j2' import HashType %}
+
+{% set msg = message %}
+{% set msg_type = msg | message_pure_type -%}
+{% set msg_mangled_type = msg | message_type -%}
+{% set T_Message = msg.generic_args[0].message %}
+{% set T = T_Message | message_type %}
+
+
+static std::vector<char> write({{ msg_mangled_type }} value) {
+    std::vector<char> result;
+
+    {% block serialization_block %}
+    std::uint16_t size = value._values.size();
+    result.insert(result.end(), (char*) &size, (char*) &size + sizeof(size));
+    
+    for(std::uint16_t i=0; i<size; ++i) {
+        auto buf = write(value._values[i]);
+        result.insert(result.end(), buf.begin(), buf.end());
+    }
+    {% endblock %}
+
+    return {result.begin(), result.end()};
+}

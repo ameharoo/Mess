@@ -1,0 +1,11 @@
+{% from 'cpp/Hashtype.j2' import HashType %}
+
+{% set msg = message %}
+{% set msg_type = msg | message_pure_type -%}
+{% set msg_mangled_type = msg | message_type -%}
+
+static std::pair<{{ msg_mangled_type }}, std::size_t> read(std::span<char> buf, Type<{{ msg_mangled_type }}>) {
+    {{ msg_mangled_type }} result;
+    result.raw = *(std::int{{ msg.bitness }}_t*) buf.data();
+    return {result, sizeof(std::int{{ msg.bitness }}_t)};
+}

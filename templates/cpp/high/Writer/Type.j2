@@ -1,0 +1,23 @@
+{% from 'cpp/Hashtype.j2' import HashType %}
+
+{% set msg = message %}
+{% set msg_type = msg | message_pure_type -%}
+{% set msg_mangled_type = msg | message_type -%}
+{% set sorted_fields = msg.fields | sort(attribute="message.is_variative") %}
+
+static std::vector<char> write({{ msg_mangled_type }} value) {
+    std::vector<char> result;
+
+    result.insert(result.end(), (char*) &value.protocol_hash, (char*) &value.protocol_hash + sizeof(value.protocol_hash));
+
+    {% block serialization_block %}
+    {% for field in sorted_fields -%}
+    {% set _field_name = field | field_name %}
+    {% set _field_message = field | field_message %}
+
+    auto buf_{{ _field_name }} = write(value.{{ _field_name }});
+    result.insert(result.end(), buf_{{ _field_name }}.begin(), buf_{{ _field_name }}.end());
+    {% endfor %}
+    {% endblock %}
+    return {result.begin(), result.end()};
+}

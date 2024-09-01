@@ -1,0 +1,17 @@
+{% from 'cpp/Hashtype.j2' import HashAssignment %}
+
+struct BaseMessage {
+    {{ HashAssignment('protocol_hash', data.protocol_hash, data.protocol_hash_bytes_count) }};
+
+    {#
+    std::span<char> to_bytes() {
+        return {(char*)protocol_hash, {{ data.protocol_hash_bytes_count }}};
+    }
+
+    std::pair<BaseMessage, std::size_t> from_bytes(std::span<char> buf) {
+        BaseMessage result();
+        result.protocol_hash = *({{ HashType() }}*)buf.data();
+        return {result, {{ data.protocol_hash_bytes_count }}};
+    }
+    #}
+};

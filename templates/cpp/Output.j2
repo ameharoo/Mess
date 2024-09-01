@@ -1,17 +1,49 @@
+{% from 'cpp/Hashtype.j2' import HashAssignment %}
+
 #pragma once
 
 {% block includes -%}
 #include <cstdint>
 #include <cassert>
+{% if data.backend.use_highlevel_api %}
+#include <vector>
+#include <utility>
+#include <span>
+#include <cstdint>
+{% endif %}
 {% endblock %}
+
+{% set HIGHLEVEL_CONTAINER_PREFIX = "high" %}
 
 {% include 'cpp/Watermark.j2' %}
 
 {% block messages_block %}
 namespace Mess::{{data.protocol_name or 'Default'}} {
     // Hash of protocol
-    {% set name = '_HASH' %}
-    const {%+ include 'cpp/Hashtype.j2' +%}
+    const {{ HashAssignment('_HASH', data.protocol_hash, data.protocol_hash_bytes_count) }};
+
+    {% if data.backend.use_highlevel_api %}
+    namespace High {
+    {% filter trim() | indent(width=8, first=True)%}
+    {% include 'cpp/high/Message.j2' with context %}
+    {% for template_name, message in data.messages  %}
+        {%- do data.hook_on_message_render(message) %}
+        {% include 'cpp/high/' + template_name %}
+
+    {% endfor %}
+    {% include 'cpp/high/Reader/Reader.j2' with context %}
+    {% include 'cpp/high/Writer/Writer.j2' with context %}
+    {% endfilter %}
+
+    {% for template_name, message in data.messages %}
+        {%- if not message.is_user_defined %}{% continue %}{% endif -%}
+        {% do data.hook_on_message_usings(message) %}
+        {%- filter indent(width=4, first=True) -%}
+        using {{ message | message_pure_type }} = {{ message | message_type }};
+        {% endfilter %}
+    {% endfor %}
+    }
+    {% endif %}
 
     {% block messages_definitions %}
     namespace Definitions {

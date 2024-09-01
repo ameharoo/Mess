@@ -1,0 +1,73 @@
+{% macro doc_comment(msg) -%}
+{% set doc = msg|message_docs %}
+{% set doc_lines = doc.split('\n') %}
+{% if doc_lines | length > 1%}
+{{ "// " + doc_lines[:-1] | join('\n// ') }}
+{% endif %}
+{% endmacro -%}
+
+
+{% set msg = message %}
+{# First simple fields (non variative), then complex, variative #}
+{% set sorted_fields = msg.fields | sort(attribute="message.is_variative") %}
+
+
+struct {{ msg | message_type }} : BaseMessage {
+    {% set name = 'protocol_hash' %}
+    {%+ include 'cpp/Hashtype.j2' +%}
+
+    {% for field in sorted_fields %}
+    {% if field | message_docs | length > 0 +%}
+    {{ doc_comment(field) | indent() }}
+    {%- endif %}
+    {{ field | field_type }} {{ field | field_name }};
+    {% endfor %}
+
+    {#
+    std::vector<char> to_bytes() {
+        std::vector<char> buf;
+        buf.insert(buf.end(), (char*)protocol_hash, (char*)protocol_hash+sizeof(protocol_hash));
+        {% block serialization_block %}
+        {% for field in sorted_fields -%}
+        {% set _field_name = field | field_name %}
+        {% set _field_message = field | field_message %}
+
+        {% if _field_message.is_user_defined or _field_message.is_complex_type %}
+        // Mess container
+        auto buf_{{ _field_name }} = {{ _field_name }}.to_bytes();
+        {% else %}
+        // Trying access like a plain bytes
+        auto buf_{{ _field_name }} = std::vector((char*){{ _field_name }}, (char*){{ _field_name }}+{{_field_message.get_sizeof_method(_field_name)}});
+        {% endif %}
+        buf.insert(buf.end(), buf_{{ _field_name }}.begin(), buf_{{ _field_name }}.end());
+        {% endfor %}
+        {% endblock %}
+
+        return buf;
+    }
+
+    static std::pair<{{ HIGHLEVEL_CONTAINER_PREFIX }}{{ msg | message_type }}, std::size_t> from_bytes(std::span<char> buf) {
+        {{ HIGHLEVEL_CONTAINER_PREFIX }}{{ msg | message_type }} result;
+        
+        result.protocol_hash = *(typeof(result.protocol_hash)*) buf.subspan(0, {{ data.protocol_hash }}).data();
+        buf.insert(buf.end(), (char*)protocol_hash, (char*)protocol_hash+sizeof(protocol_hash));
+        {% block deserialization_block %}
+        {% for field in sorted_fields -%}
+        {% set _field_name = field | field_name %}
+        {% set _field_message = field | field_message %}
+
+        {% if _field_message.is_user_defined or _field_message.is_complex_type %}
+        // Mess container
+        auto buf_{{ _field_name }} = {{ _field_name }}.from_bytes(buf.subspan(offset));
+        {% else %}
+        // Trying access like a plain bytes
+        auto buf_{{ _field_name }} = buf.subspan(offset)
+        {% endif %}
+        buf.insert(buf.end(), buf_{{ _field_name }}.begin(), buf_{{ _field_name }}.end());
+        {% endfor %}
+        {% endblock %}
+
+        return buf;
+    }
+    #}
+};

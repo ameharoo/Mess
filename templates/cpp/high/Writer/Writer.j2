@@ -1,0 +1,12 @@
+class Writer {
+    public:
+    template <typename T>
+    struct Type {}; // empty
+
+    {% for template_name, message in data.messages  %}
+        {%- filter trim() | indent(width=4, first=True) %}
+        {% include 'cpp/high/Writer/' + template_name %}
+        {% endfilter +%}
+
+    {% endfor %}
+};

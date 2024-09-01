@@ -1,0 +1,22 @@
+class Reader {
+    protected:
+    template <typename T>
+    struct Type {}; // empty
+
+    {% for template_name, message in data.messages  %}
+        {%- filter trim() | indent(width=4, first=True) %}
+        {% include 'cpp/high/Reader/' + template_name %}
+        {% endfilter +%}
+
+    {% endfor %}
+
+    public:
+    template <typename T>
+    static T read(std::span<char> buf, std::size_t* read_bytes = nullptr) {
+        auto result = read(buf, Type<T>{});
+        if (read_bytes)
+            *read_bytes = result.second;
+        
+        return result.first;
+    }
+};

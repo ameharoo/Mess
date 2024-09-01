@@ -1,0 +1,10 @@
+{% from 'cpp/Hashtype.j2' import HashType %}
+
+{% set msg = message %}
+{% set msg_type = msg | message_pure_type -%}
+{% set msg_mangled_type = msg | message_type -%}
+
+
+static std::vector<char> write({{ msg_mangled_type }} value) {
+    return {(char*) &value.raw, (char*) &value.raw + sizeof(std::int{{ msg.bitness }}_t)};
+}

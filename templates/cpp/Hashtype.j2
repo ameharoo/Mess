@@ -1,28 +1,25 @@
-{% block hashtype %}
-{% if data.protocol_hash_bytes_count == 1 %}
+{% macro HashType(protocol_hash_bytes_count) %}
+{% if protocol_hash_bytes_count == 1 %}
     {% block HashCount1 -%}
     std::uint8_t
     {%- endblock %}
-{% elif data.protocol_hash_bytes_count == 2 %}
+{% elif protocol_hash_bytes_count == 2 %}
     {% block HashCount2 -%}
     std::uint16_t
     {%- endblock %}
-{% elif data.protocol_hash_bytes_count == 4 %}
+{% elif protocol_hash_bytes_count == 4 %}
     {% block HashCount4 -%}
     std::uint32_t
     {%- endblock %}
-{% elif data.protocol_hash_bytes_count == 8 %}
+{% elif protocol_hash_bytes_count == 8 %}
     {% block HashCount8 -%}
     std::uint64_t
     {%- endblock %}
 {% endif %}
-{% endblock -%}
-{% block hash_assignment %}
- {{ name }} = {{ data.protocol_hash }}
-{%- endblock %}
-{% block hashtype_postfix %}
-{%- if data.protocol_hash_bytes_count == 8 -%}
+{% endmacro %}
+{% macro HashAssignment(name, protocol_hash, protocol_hash_bytes_count) %}
+{{ HashType(protocol_hash_bytes_count) }} {{ name }} = {{ protocol_hash }}
+{%- if protocol_hash_bytes_count == 8 -%}
     ULL
 {%- endif %}
-{% endblock -%}
-;
+{% endmacro %}
