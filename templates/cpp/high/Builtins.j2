@@ -16,7 +16,7 @@
     {%- endblock %}
 {% elif type == 'Uint16' %}
     {% block Uint16 -%}
-    using {{ msg | message_type }} = std::uint8_t;
+    using {{ msg | message_type }} = std::uint16_t;
     {%- endblock %}
 {% elif type == 'Int32' %}
     {% block Int32 -%}
