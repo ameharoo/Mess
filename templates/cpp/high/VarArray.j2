@@ -9,7 +9,7 @@ struct {{ msg_type }} {
 
     {%- if T_Message | message_pure_type in ['Uint8', 'Int8'] %}
     {{ msg_type }}(const char* values) {
-        _values.reserve(strlen(values));
+        _values.reserve(std::strlen(values));
         for (const char* it = values; *it != '\0'; ++it) {
             _values.emplace_back(*it);
         }
