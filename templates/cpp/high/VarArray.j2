@@ -7,17 +7,40 @@
 struct {{ msg_type }} {
     std::vector<{{ T }}> _values;
 
-    {%- if T_Message | message_pure_type in ['Uint8', 'Int8'] %}
+    {{ msg_type }}(const std::vector<{{ T }}>& values) : _values(values) {}
+
+    {{ msg_type }}() = default;
+
+    {% if T_Message | message_pure_type in ['Uint8', 'Int8'] %}
     {{ msg_type }}(const char* values) {
         _values.reserve(std::strlen(values));
         for (const char* it = values; *it != '\0'; ++it) {
             _values.emplace_back(*it);
         }
     }
+
     {{ msg_type }}(const std::string& values) : _values({values.begin(), values.end()}) {}
+
+    std::string str() const {
+        return std::string((char*)_values.data(), _values.size());
+    }
+
+    operator std::string() const {
+        return str();
+    }
     {% endif %}
-    {{ msg_type }}(const std::vector<{{ T }}>& values) : _values(values) {}
-    {{ msg_type }}() = default;
+    
+    std::vector<{{ T }}>::iterator begin() {
+        return _values.begin();
+    }
+    
+    std::vector<{{ T }}>::iterator end() {
+        return _values.begin();
+    }
+    
+    std::size_t size() {
+        return _values.size();
+    }
     {#
     std::vector<char> to_bytes() {
         std::vector<char> buf;
