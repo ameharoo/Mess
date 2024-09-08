@@ -51,7 +51,7 @@ struct {{ msg_type }} {
     }
 };
 
-std::int32_t get_vararr_size(const {{ msg_type }}& arr) {
+inline std::int32_t get_vararr_size(const {{ msg_type }}& arr) {
     return sizeof({{ msg_type }}) + (arr.size - 1) * {{ T_Message.get_sizeof_method("arr.values[0]") }};
 }
 #pragma pack(pop)
