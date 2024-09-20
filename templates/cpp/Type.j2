@@ -1,4 +1,4 @@
-{% from 'cpp/Hashtype.j2' import HashAssignment %}
+{% from 'cpp/Hashtype.j2' import HashAssignment, HashType %}
 
 {% macro var_static_size_name(msg) -%}{{ msg | message_type | upper }}_STATIC_SIZE{% endmacro %}
 
@@ -22,7 +22,7 @@
 
 {% block before_definition %}
 {% block static_size_definition %}
-constexpr std::size_t {{ var_static_size_name(msg) }} = 
+constexpr std::size_t {{ var_static_size_name(msg) }} = sizeof({{ HashType(data.protocol_hash_bytes_count) }}) +
 {%- if msg | message_novar_fields | length > 0 %}
  ({{ msg | message_novar_fields | map('field_type') | map('wrap', 'sizeof(', ')') | join(' + ') }});
 {%- else %}
