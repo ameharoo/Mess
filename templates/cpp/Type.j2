@@ -102,7 +102,7 @@ struct {{ msg | message_type }} {
     static void Initialize(std::int8_t* buf{{field_var_sizes()}})  {
         {#{% if variatives | length > 0 %}#}
         auto value = ::new(buf) {{ msg | message_type }}();
-        assert(value->protocol_hash == ::Mess::{{data.protocol_name}}::_HASH);
+        assert(value->protocol_hash == ::Mess::{{data.protocol_name or 'Default'}}::_HASH);
         {#{% endif %}#}
         // ...
         {% for variative in variatives %}
