@@ -64,6 +64,12 @@ struct {{ msg | message_type }} {
     }
     {% endblock %}
 
+    {% block begin_method %}
+    std::int8_t* begin() {
+       return (std::int8_t*) (&protocol_hash);
+    }
+    {% endblock %}
+
     {% block last_method %}
     std::int8_t* last() {
         {% if sorted_fields | length  > 0 %}
@@ -87,7 +93,7 @@ struct {{ msg | message_type }} {
 
     {% block get_size_method %}
     std::uint16_t get_size() {
-        return (std::uint16_t) (end() - first());
+        return (std::uint16_t) (end() - begin());
     }
     {% endblock %}
 
