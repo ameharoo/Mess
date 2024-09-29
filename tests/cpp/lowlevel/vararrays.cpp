@@ -1,10 +1,18 @@
 #include <gtest/gtest.h>
 #include <test_protocol.h>
 
-std::string convert_int32_to_string(std::int32_t* data, size_t data_length) {
+template<size_t SIZE>
+std::string to_string(std::array<std::int32_t, SIZE> data) {
     std::stringstream ss;
-    for(int i=0; i<data_length; ++i)
+    for(int i=0; i<data.size(); ++i)
         ss << std::hex << data[i] << " ";
+    return ss.str();
+}
+
+std::string to_string(Mess::Default::TestArray* data) {
+    std::stringstream ss;
+    for(int i=0; i<data->array().size; ++i)
+        ss << std::hex << data->array()[i] << " ";
     return ss.str();
 }
 
@@ -12,7 +20,7 @@ TEST(TestReadWriteTypes, VarArrayInt32) {
     using namespace Mess::Default;
 
     // Test data
-    std::int32_t values[10] { INT32_MAX, INT32_MIN, 0, 40, 50, 60, 70, 80, 90, 100};
+    std::array<std::int32_t, 10> values { INT32_MAX, INT32_MIN, 0, 40, 50, 60, 70, 80, 90, 100};
 
     // Create buffer
     std::vector<int8_t> in_message_buf(TestArray::get_alloc_size(10));
@@ -21,8 +29,9 @@ TEST(TestReadWriteTypes, VarArrayInt32) {
     auto in_message = (TestArray*) in_message_buf.data();
 
     ASSERT_TRUE((std::int8_t*)in_message->array().values + sizeof(values) <=  (std::int8_t*)in_message_buf.end().base());
+
     // Copy values
-    std::memcpy(in_message->array().values, values, sizeof(values));
+    std::memcpy(in_message->array().values, values.data(), sizeof(std::int32_t) * values.size());
 
     // Check size (hash + vararray_size_field + int32 * 10)
     ASSERT_EQ(in_message->get_size(), 8 + 2 + 4*10);
@@ -31,8 +40,8 @@ TEST(TestReadWriteTypes, VarArrayInt32) {
 
 
     // Check field value
-    ASSERT_STREQ(convert_int32_to_string(in_message->array().values, 10).c_str(),
-            convert_int32_to_string(values, 10).c_str());
+    ASSERT_STREQ(to_string(in_message).c_str(),
+                 to_string(values).c_str());
 
     // Copy data from in_message to out_message
     std::vector<int8_t> out_message_buf(in_message_buf);
@@ -45,8 +54,8 @@ TEST(TestReadWriteTypes, VarArrayInt32) {
     ASSERT_EQ(out_message->array().get_size(), 2 + 4*10);
 
     // Check deserialized field value
-    ASSERT_STREQ(convert_int32_to_string(out_message->array().values, 10).c_str(),
-            convert_int32_to_string(values, 10).c_str());
+    ASSERT_STREQ(to_string(out_message).c_str(),
+                 to_string(values).c_str());
 
     // Check deserialized message protocol hash
     ASSERT_EQ(out_message->protocol_hash, _HASH);
