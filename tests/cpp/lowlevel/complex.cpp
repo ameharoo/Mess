@@ -28,7 +28,7 @@ TEST(TestReadWriteTypes, Complex) {
 
     // Expected size: hash + (static_field_size) + (vararray_size_field + int32 * 10) + (vararray_size_field + string)
     auto expected_size_in_bytes = 8 + (1 + 1 + 2 + 2 + 4 + 4 + 4) + (2 + 4*array_values.size()) + (2 + string_values.size());
-    auto expected_bytes = "66 5d 36 e6 21 1d 66 1a 01 02 03 00 04 00 05 00 00 00 06 00 00 00 66 66 f6 40 0a 00 ff ff ff 7f 00 00 00 80 00 00 00 00 28 00 00 00 32 00 00 00 3c 00 00 00 46 00 00 00 50 00 00 00 5a 00 00 00 64 00 00 00 09 00 48 69 20 47 54 65 73 74 21";
+    auto expected_bytes = "1a 66 1d 21 e6 36 5d 66 01 02 03 00 04 00 05 00 00 00 06 00 00 00 66 66 f6 40 0a 00 ff ff ff 7f 00 00 00 80 00 00 00 00 28 00 00 00 32 00 00 00 3c 00 00 00 46 00 00 00 50 00 00 00 5a 00 00 00 64 00 00 00 09 00 48 69 20 47 54 65 73 74 21";
 
     // Create buffer
     std::vector<int8_t> in_message_buf(TestComplex::get_alloc_size(array_values.size(), string_values.size()));
