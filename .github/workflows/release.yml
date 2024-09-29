@@ -20,5 +20,5 @@ jobs:
       - name: make
         run: cd tests/cpp/build && make
       - name: Run Test
-        run: /home/runner/work/Mess/Mess/build/cpp_ll_api_test
+        run: /home/runner/work/Mess/Mess/tests/cpp/build/cpp_ll_api_test
 
