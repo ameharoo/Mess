@@ -148,10 +148,24 @@ TEST(TestReadWriteTypes, VarArrayNested) {
     auto in_message = (TestArrayNested*) in_message_buf.data();
 
     // Copy values
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wstringop-overflow"
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#elif defined(_MSC_VER)
+#endif
     for(int i=0; i < in_message->array_nested().size; ++i) {
         in_message->array_nested().values[i].int8() = test_entries[i].int8;
-        in_message->array_nested().values[i].uint32() = test_entries[i].uint32;
+        in_message->array_nested(). values[i].uint32() = test_entries[i].uint32;
     }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#endif
 
     // Check size (hash + vararray_size_field + entry * 10)
     ASSERT_EQ(in_message->get_size(), 8 + 2 + 10 * sizeof(Entry));
