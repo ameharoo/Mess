@@ -97,7 +97,7 @@ class Generator:
 
             protocol_hash_bytes_count = self.ini_parser.hash_bytes_count
             messages_hash = hashlib.sha256(";".join([str(msg[1]) for msg in messages_to_render]).encode()).digest()
-            protocol_hash = int.from_bytes(messages_hash[:protocol_hash_bytes_count])
+            protocol_hash = int.from_bytes(messages_hash[:protocol_hash_bytes_count], byteorder='little')
 
 
             # message_code = self.render_message(str(message))
