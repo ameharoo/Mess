@@ -124,8 +124,13 @@ struct {{ msg | message_type }} {
     {% endblock %}
 
     {% block get_alloc_size_method %}
-    static constexpr std::size_t get_alloc_size() {
-        return {{ var_static_size_name(msg)  }};
+    {% set variatives = msg | message_var_fields %}
+    static constexpr std::size_t get_alloc_size({% for variative in variatives %}{% if not loop.first %}, {% endif %}std::uint16_t {{ "size_" + variative | field_name }}{% endfor %}) {
+        std::size_t total_size = {{ var_static_size_name(msg) }};
+        {% for variative in variatives %}
+        total_size += {{ variative | field_type }}::get_vararr_size({{ "size_" + variative | field_name }});
+        {% endfor %}
+        return total_size;
     }
     {% endblock %}
 
@@ -144,7 +149,7 @@ struct {{ msg | message_type }} {
         {%- endfor %}
     {% endmacro%}
     static {{ msg | message_type }}* Allocate({{field_var_sizes()}}) {
-        auto alloc_size = get_alloc_size();
+        auto alloc_size = get_alloc_size({% for variative in variatives %}{% if not loop.first %}, {% endif %}{{ "size_" + variative | field_name }}{% endfor %});
 
         auto buf = new std::int8_t[alloc_size]{0};
         {{ msg | message_type }}::Initialize(buf{{field_var_sizes_call()}});
