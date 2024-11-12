@@ -41,7 +41,8 @@ constexpr std::size_t {{ var_static_size_name(msg) }} = sizeof({{ HashType(data.
 #pragma pack(push, 1)
 struct {{ msg | message_type }} {
     {{ HashAssignment('protocol_hash', data.protocol_hash, data.protocol_hash_bytes_count) }};
-
+    std::int8_t buffer[{{ var_static_size_name(msg) }} - sizeof({{ HashType(data.protocol_hash_bytes_count) }})];
+    
     {% block fields_definition %}
     {% for field in sorted_fields +%}
     {% if field | message_docs | length > 0 %}
