@@ -103,10 +103,12 @@ TEST(TestReadWriteTypes, VarArrayString) {
     ASSERT_EQ(out_message->protocol_hash, _HASH);
 }
 
+#pragma pack(push, 1)
 struct Entry {
     std::int8_t int8;
     std::uint32_t uint32;
 };
+#pragma pack(pop)
 
 
 template<size_t SIZE>
@@ -147,7 +149,6 @@ TEST(TestReadWriteTypes, VarArrayNested) {
 
     auto in_message = (TestArrayNested*) in_message_buf.data();
 
-    // Copy values
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wstringop-overflow"
@@ -156,6 +157,7 @@ TEST(TestReadWriteTypes, VarArrayNested) {
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
 #elif defined(_MSC_VER)
 #endif
+    // Copy values
     for(int i=0; i < in_message->array_nested().size; ++i) {
         in_message->array_nested().values[i].int8() = test_entries[i].int8;
         in_message->array_nested(). values[i].uint32() = test_entries[i].uint32;
@@ -166,11 +168,10 @@ TEST(TestReadWriteTypes, VarArrayNested) {
 #pragma GCC diagnostic pop
 #elif defined(_MSC_VER)
 #endif
-
-    // Check size (hash + vararray_size_field + entry * 10)
-    ASSERT_EQ(in_message->get_size(), 8 + 2 + 10 * sizeof(Entry));
+    // Check size (hash + vararray_size_field + (entry with hash) * 10)
+    ASSERT_EQ(in_message->get_size(), 8 + 2 + 10 * (8 + sizeof(Entry)));
     ASSERT_EQ(in_message->array_nested().size, 10);
-    ASSERT_EQ(in_message->array_nested().get_size(), 2 + 10 * sizeof(Entry));
+    ASSERT_EQ(in_message->array_nested().get_size(), 2 + 10 * (8 + sizeof(Entry)));
 
     // Check field value
     ASSERT_STREQ(to_string(in_message).c_str(),
@@ -181,10 +182,10 @@ TEST(TestReadWriteTypes, VarArrayNested) {
 
     auto out_message = (TestArrayNested*) out_message_buf.data();
 
-    // Check size (hash + vararray_size_field + entry * 10)
-    ASSERT_EQ(out_message->get_size(), 8 + 2 + 10 * sizeof(Entry));
+    // Check size (hash + vararray_size_field + (entry with hash) * 10)
+    ASSERT_EQ(out_message->get_size(), 8 + 2 + 10 * (8 + sizeof(Entry)));
     ASSERT_EQ(out_message->array_nested().size, 10);
-    ASSERT_EQ(out_message->array_nested().get_size(), 2 + 10 * sizeof(Entry));
+    ASSERT_EQ(out_message->array_nested().get_size(), 2 + 10 * (8 + sizeof(Entry)));
 
     // Check deserialized field value
     ASSERT_STREQ(to_string(out_message).c_str(),
