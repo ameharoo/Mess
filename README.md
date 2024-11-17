@@ -1,3 +1,4 @@
+![example workflow](https://github.com/ameharoo/Mess/actions/workflows/release.yml/badge.svg)
 # Mess 
 are extensible and language-neutral Mess(-ages Embedded Style Serialization).  
 Supported backends:
