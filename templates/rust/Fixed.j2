@@ -1,0 +1,13 @@
+{%- set msg = message %}
+{% set msg_type = msg | message_pure_type %}
+{% set msg_mangled_type = msg | message_type %}
+
+{% set size_in_bytes = 0 %}
+
+{% if msg_type == 'Fixed16' %}
+    {% set size_in_bytes = 2 %}
+{% elif msg_type == 'Fixed32' %}
+    {% set size_in_bytes = 4 %}
+{% endif %}
+
+// Todo: Render for {{ msg_type }} in Rust

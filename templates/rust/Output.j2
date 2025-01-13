@@ -1,0 +1,27 @@
+#![allow(dead_code)]
+
+{% block includes -%}
+// todo: add imports 
+{% endblock %}
+
+{% include 'rust/Watermark.j2' %}
+
+{% block messages_block %}
+// Namespace: {{data.protocol_name or 'Default'}}
+
+// Hash of protocol
+{%+ block hash -%}
+    // protocol_hash: int = {{ data.protocol_hash }}
+{% endblock %}
+
+{% block messages_definitions %}
+{% for template_name, message in data.messages %}
+    {%- do data.hook_on_message_render(message) -%}
+    {% filter trim() %}
+    {% include 'rust/' + template_name %}
+    {% endfilter +%}
+    
+{% endfor %}
+{% endblock%}
+{%endblock%}
+ 

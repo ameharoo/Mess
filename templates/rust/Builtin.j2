@@ -1,0 +1,22 @@
+{%- macro RenderType(msg) -%}
+{%- set msg_type = msg | message_pure_type -%}
+{%- if msg_type == 'Int8' -%}
+    i8
+{%- elif msg_type == 'Uint8' -%}
+    u8
+{%- elif msg_type == 'Int16' -%}
+    i16
+{%- elif msg_type == 'Uint16' -%}
+    u16
+{%- elif msg_type == 'Int32' -%}
+    i32
+{%- elif msg_type == 'Uint32' -%}
+    u32
+{%- elif msg_type == 'Float' -%}
+    f32
+{%- elif msg_type == 'VarArray' -%}
+    Vec<{{ RenderType(msg.generic_args[0].message) }}>
+{%- else -%}
+    {{msg_type}}
+{%- endif %}
+{%- endmacro -%}

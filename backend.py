@@ -140,3 +140,10 @@ class PythonBackend(Backend):
     
     def render_message(self, message:  messages_base.Message):
         return super().render_message(message)
+
+class RustBackend(Backend):
+    name = "rust"
+    path_to_templates = "rust/"
+    
+    def render_message(self, message:  messages_base.Message):
+        return super().render_message(message)
